@@ -1,19 +1,13 @@
-var express = require('express');
-var app = express();
-var request = require('request');
-var cheerio = require('cheerio');
+const http = require("https");
+const cheerio = require("cheerio");
 
-app.get('/', function(req, res) {
- 
-  request('http://taobao.com', function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      $ = cheerio.load(body);
-      console.log(body);
-      res.send(body);
-    }
-  })
-});
+const url = "https://search.jd.com/Search?keyword=iphone&wq=iphone";
 
-var server = app.listen(5555, function() {
-  console.log('listening at 5555');
+http.get(url, function(res){
+  res.on("data", function(data){
+    console.log("data" + data);
+  });
+  res.on("end", function(data){
+    console.log("end" + data);
+  });
 });
