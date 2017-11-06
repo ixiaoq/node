@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * { margin: 0; padding: 0;}
+        #box { width: 500px; margin: 50px auto; padding: 10px;  border: 1px solid #ccc; display: flex; }
+        #show_view { flex: 1; }
+        #result { flex: 1.2; padding: 15px; border: 1px solid #ccc; font-size: 14px; word-break: break-all;}
+
+        h5 { height: 30px;}
+        .show_img { display: flex; width: 120px; height: 170px; border: 1px solid #ccc; margin-bottom: 10px; align-items: center;}
+        .show_img img { width: 100%; }
+        input { margin: 5px 0;}
+        button { margin: 5px; }
+    </style>
+</head>
+
+<body>
+    <div id="box">
+        <div id="show_view">
+            <h5>人脸识别：</h5>
+            <div class="show_img">
+                <img id="preview" src="" alt="">
+            </div>
+            <input id="file" type="file" name="resource"/ style="width: 170px;">
+            <br>
+            ID：
+            <input id="uid" type="text" style="width: 100px;"><br>
+            昵称：
+            <input id="name" type="text" style="width: 100px;"><br>
+            <br>
+            <button onclick="addUser()">注册</button>
+            <button onclick="updateUser()">更新</button>
+            <button onclick="getUser()">查询用户</button>
+            <br>
+            <button onclick="identifyUser()">识别</button>
+            <button onclick="verifyUser()">认证</button>
+        </div>
+
+        <div id="result">
+
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("file").onchange = function (e) {
+            uploadHandler.reader(e.target.files[0]);
+        };
+
+        var uploadHandler = {
+            imgData: "",
+
+            reader: (src) => {
+                var reader = new FileReader;
+                reader.onload = function(e) {
+                    document.getElementById("preview").src = e.target.result;
+                    uploadHandler.imgData = e.target.result;
+                };
+                reader.readAsDataURL(src);
+            }
+        };
+        
+        // 注册
+        function addUser() {
+            var formData = new FormData();
+            formData.append("uid", document.getElementById("uid").value || "");
+            formData.append("name", document.getElementById("name").value || "");
+
+            ajax("addUser", formData, function(data) {
+                document.getElementById("result").innerHTML = data;
+            });
+        }
+
+        // 更新
+        function updateUser() {
+            var formData = new FormData();
+            formData.append("uid", document.getElementById("uid").value || "");
+            formData.append("name", document.getElementById("name").value || "");
+
+            ajax("updateUser", formData, function(data) {
+                document.getElementById("result").innerHTML = data;
+            });
+        }
+
+        // 查询
+        function getUser() {
+            var formData = new FormData();
+            formData.append("uid", document.getElementById("uid").value || "");
+
+            ajax("getUser", formData, function(data) {
+                if (typeof data === "string") {
+                    data = JSON.parse(data);
+                }
+
+                var html = '';
+
+                data.result.forEach((item, i) => {
+                    html += `
+                        ${ i } <br/>
+                        id: ${ item.uid } <br/>
+                        昵称: ${ item.user_info } <br/><br/>`
+                });
+
+                document.getElementById("result").innerHTML = html;
+            });
+        }
+
+        // 识别
+        function identifyUser() {
+            var formData = new FormData();
+
+            ajax("identifyUser", formData, function(data) {
+                if (typeof data === "string") {
+                    data = JSON.parse(data);
+                }
+
+                var result = data.result[0];
+                var html = `
+                    昵称: ${result.user_info}<br>
+                    分数: ${result.scores[0]}<br>
+                `;
+                document.getElementById("result").innerHTML = html;
+            });
+        }
+
+        // 认证
+        function verifyUser() {
+            var formData = new FormData();
+            formData.append("uid", document.getElementById("uid").value || "");
+
+            ajax("verifyUser", formData, function(data) {
+                if (typeof data === "string") {
+                    data = JSON.parse(data);
+                }
+
+                var result = data.result[0] > 80 ? "成功" : "失败";
+                var html = `
+                    结果: ${result}<br>
+                    分数: ${data.result[0]}<br>
+                `;
+                document.getElementById("result").innerHTML = html;
+            });
+        }
+        
+
+        function ajax(type, formData, cb) {
+            var xhr = new XMLHttpRequest();
+            var url = "http://localhost:6060/file_upload"
+
+            xhr.open("POST", url, true);
+            xhr.onreadystatechange = function(){
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    cb && cb(xhr.responseText);
+                }
+            };
+
+            formData.append("type", type);
+            formData.append("img", uploadHandler.imgData);
+
+            xhr.send(formData);
+        }
+    
+    </script>
+
+</body>
+
+</html>
