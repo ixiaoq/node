@@ -1,0 +1,16 @@
+{
+  "name": "pachong",
+  "version": "1.0.0",
+  "description": "爬虫 ",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "yaoxq",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.82.0",
+    "superagent": "^3.6.3"
+  }
+}
