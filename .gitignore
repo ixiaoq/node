@@ -1,2 +1,4 @@
 /node_modules
 /.vscode
+/aip-face-client/node_modules
+/crawler/node_modules
