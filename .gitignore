@@ -2,3 +2,4 @@
 /.vscode
 /aip-face-client/node_modules
 /crawler/node_modules
+/koa/node_modules
