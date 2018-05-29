@@ -8,40 +8,40 @@ const allUrl = [];
 
 
 var pageUrls = ["https://www.cnblogs.com"],
-    pageNum = 200;
+    pageNum = 10;
 
 for(var i=2; i<=pageNum; i++) {
     pageUrls.push("https://www.cnblogs.com/#p" + i);
 }
 
 pageUrls.forEach((url, i) => {
+    console.log(url,i);
+    // https.get(url, function (res) {
+    //     console.log('statusCode:', res.statusCode);
+    
+    //     let html = "";
+    
+    //     res.on("data", function (data) {
+    //         html += data;
+    //     });
+    
+    //     res.on("end", function (data) {
+    //         var $ = cheerio.load(html);
+    //         $(".titlelnk").each((i, item) => {
+    //             allUrl.push($(item).attr("href"));
+    //         });
 
-    https.get(url, function (res) {
-        console.log('statusCode:', res.statusCode);
+    //         console.log(i + "请求完成");
     
-        let html = "";
+    //         // fs.writeFile("data.txt", JSON.stringify(result), (err) => {
+    //         // 	if(err) return console.log(err);
+    //         // 	console.log("写入成功");
+    //         // });
+    //     });
     
-        res.on("data", function (data) {
-            html += data;
-        });
-    
-        res.on("end", function (data) {
-            var $ = cheerio.load(html);
-            $(".titlelnk").each((i, item) => {
-                allUrl.push($(item).attr("href"));
-            });
-
-            console.log(i + "请求完成");
-    
-            // fs.writeFile("data.txt", JSON.stringify(result), (err) => {
-            // 	if(err) return console.log(err);
-            // 	console.log("写入成功");
-            // });
-        });
-    
-    }).on("error", (error) => {
-        console.log(error);
-    });
+    // }).on("error", (error) => {
+    //     console.log(error);
+    // });
     
 });
 
