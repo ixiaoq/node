@@ -1,48 +1,121 @@
 const https = require("https");
+const path = require("path");
 const cheerio = require("cheerio");
 const superagent = require("superagent");
 const fs = require("fs");
+const async = require('async');
 
-const url = "https://www.cnblogs.com/#p2";
-const allUrl = [];
+// page
+const pageCount = 2;
+const pageUrl = [];
 
-
-var pageUrls = ["https://www.cnblogs.com"],
-    pageNum = 10;
-
-for(var i=2; i<=pageNum; i++) {
-    pageUrls.push("https://www.cnblogs.com/#p" + i);
+for (let i = 1; i <= pageCount; i++) {
+    if (i == 1) {
+        pageUrl.push("https://www.cnblogs.com/cate/108703/");    
+    } else {
+        pageUrl.push("https://www.cnblogs.com/cate/108703/#p" + i);
+    }
 }
 
-pageUrls.forEach((url, i) => {
-    console.log(url,i);
-    // https.get(url, function (res) {
-    //     console.log('statusCode:', res.statusCode);
-    
-    //     let html = "";
-    
-    //     res.on("data", function (data) {
-    //         html += data;
-    //     });
-    
-    //     res.on("end", function (data) {
-    //         var $ = cheerio.load(html);
-    //         $(".titlelnk").each((i, item) => {
-    //             allUrl.push($(item).attr("href"));
-    //         });
 
-    //         console.log(i + "请求完成");
-    
-    //         // fs.writeFile("data.txt", JSON.stringify(result), (err) => {
-    //         // 	if(err) return console.log(err);
-    //         // 	console.log("写入成功");
-    //         // });
-    //     });
-    
-    // }).on("error", (error) => {
-    //     console.log(error);
-    // });
-    
-});
+//  定时器
 
-console.log(allUrl);
+const day = 86400000;
+const YMD = new Date().toLocaleDateString();
+let lowTime = new Date(`${YMD} 00:00:00`).getTime();
+
+setInterval(timeHandler, 1000);
+
+function timeHandler() {
+	let time = Date.now();
+
+	if (time >= (lowTime + day)) {
+		console.log(`日期：${YMD} cnblogs 获取数据...`);
+
+		getPage2Url(pageUrl);
+
+		lowTime = time;
+	}
+}
+
+
+// 获取页面的全部url
+function getPage2Url(pageUrl) {
+	let count = 1;
+
+	async.mapLimit(pageUrl, 1, async (url) => {
+		let linkList = [];
+		
+		let html = await getRequest(url);
+
+		let $ = cheerio.load(html);
+		
+		// 获取指定内容
+		$(".titlelnk").each((i, item) => {
+			let data = {
+				href: $(item).attr("href"),
+				title: $(item).text()
+			};
+
+			linkList.push(data);
+		});
+
+		console.log(`第 ${count} 条请求完成.`);
+		count++;
+
+		return linkList;
+
+	}, (err, results) => {
+		if (err) throw err;
+		
+		writeFile(results);
+	})
+}
+
+// 写入文件
+function writeFile(results) {
+	let data = {
+		date: new Date().toLocaleString(),
+		data: results
+	};
+
+	let jsonData = JSON.stringify(data);
+
+	// 文件名称
+	let fileName = new Date().toLocaleDateString();
+	let filePath = path.join(__dirname, `/file`);
+
+	if (!fs.existsSync(filePath)) {
+		fs.mkdirSync(filePath);
+	}
+
+	fs.writeFile(`file/${fileName}.txt`, jsonData, (err) => {
+		if (err) throw err;
+	})
+}
+
+
+// 发送请求
+function getRequest(url) {
+    return new Promise((resolve, reject) => {
+		
+		setTimeout(() => {
+			https.get(url, function (res) {
+				let html = "";
+		  
+				res.on("data", function (data) {
+					html += data;
+				});
+		  
+				res.on("end", function (data) {
+					resolve(html);
+				});
+		  
+			}).on("error", (error) => {
+				reject(error);
+			});
+		}, 500);
+        
+    });
+}
+
