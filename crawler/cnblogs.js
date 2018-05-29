@@ -5,6 +5,8 @@ const superagent = require("superagent");
 const fs = require("fs");
 const async = require('async');
 
+const { query } = require('./db');
+
 // page
 const pageCount = 2;
 const pageUrl = [];
@@ -83,14 +85,19 @@ function writeFile(results) {
 
 	// 文件名称
 	let fileName = new Date().toLocaleDateString();
-	let filePath = path.join(__dirname, `/file`);
+	let dirPath = path.join(__dirname, `/file`);
+	let filePath = path.join(dirPath, `/${fileName}.txt`);
 
-	if (!fs.existsSync(filePath)) {
-		fs.mkdirSync(filePath);
+	if (!fs.existsSync(dirPath)) {
+		fs.mkdirSync(dirPath);
 	}
 
-	fs.writeFile(`file/${fileName}.txt`, jsonData, (err) => {
+	fs.writeFile(filePath, jsonData, async (err) => {
 		if (err) throw err;
+
+		let sql = `INSET INTO cnblogs set date=?, file_path=?`;
+
+		await query(sql, [fileName, filePath]);
 	})
 }
 
