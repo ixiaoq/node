@@ -4,13 +4,15 @@
   "description": "爬虫 ",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon --harmony cnblogs.js"
+    "start": "cls && nodemon --harmony mongodb.js"
   },
   "author": "yaoxq",
   "license": "ISC",
   "dependencies": {
+    "assert": "^1.4.1",
     "async": "^2.6.1",
     "cheerio": "^1.0.0-rc.2",
+    "mongodb": "^3.1.0-beta4",
     "request": "^2.82.0",
     "superagent": "^3.6.3"
   },
