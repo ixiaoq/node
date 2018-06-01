@@ -5,7 +5,13 @@ const superagent = require("superagent");
 const fs = require("fs");
 const async = require('async');
 
-const { query } = require('./db');
+const MongoDB = require("./mongodb");
+
+const dbUrl = `mongodb://139.199.129.237:27017`;
+const dbName = `meizi`;
+
+const db = new MongoDB(dbUrl, dbName);
+
 
 // page
 const pageCount = 2;
@@ -41,6 +47,7 @@ function timeHandler() {
 }
 
 
+
 // 获取页面的全部url
 function getPage2Url(pageUrl) {
 	let count = 1;
@@ -53,10 +60,11 @@ function getPage2Url(pageUrl) {
 		let $ = cheerio.load(html);
 		
 		// 获取指定内容
-		$(".titlelnk").each((i, item) => {
+		$(".post_item_body").each((i, item) => {
 			let data = {
-				href: $(item).attr("href"),
-				title: $(item).text()
+				href: $(item).find(".titlelnk").attr("href"),
+				title: $(item).find(".titlelnk").text(),
+				desc: $(item).find(".post_item_summary").text()
 			};
 
 			linkList.push(data);
@@ -64,6 +72,12 @@ function getPage2Url(pageUrl) {
 
 		console.log(`第 ${count} 条请求完成.`);
 		count++;
+
+		// 插入
+		db.insert("cnblogs", linkList, (err, result) => {
+			if (err) throw err;
+			console.log("插入数据库完成!");
+		});
 
 		return linkList;
 
@@ -94,10 +108,7 @@ function writeFile(results) {
 
 	fs.writeFile(filePath, jsonData, async (err) => {
 		if (err) throw err;
-
-		let sql = `INSET INTO cnblogs set date=?, file_path=?`;
-
-		await query(sql, [fileName, filePath]);
+		console.log("保存txt");
 	})
 }
 
@@ -126,4 +137,4 @@ function getRequest(url) {
     });
 }
 
-console.log(`爬取 cnblogs`);
+console.log(`get cnblogs info`);

@@ -4,7 +4,7 @@
   "description": "爬虫 ",
   "main": "server.js",
   "scripts": {
-    "start": "cls && nodemon --harmony mongodb.js"
+    "start": "cls && nodemon --harmony cnblogs.js"
   },
   "author": "yaoxq",
   "license": "ISC",
