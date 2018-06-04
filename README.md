@@ -3,10 +3,13 @@
 > 和node相关的小项目
 
 ``` bash
-爬虫
+crawler 
 
-人脸识别
+o 爬取cnblogs信息
 
-koa
+aip-face-client
+
+o 人脸识别
+
 ```
 

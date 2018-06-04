@@ -1,4 +1,4 @@
-const https = require("https");
+
 const path = require("path");
 const cheerio = require("cheerio");
 const superagent = require("superagent");
@@ -7,14 +7,15 @@ const async = require('async');
 
 const MongoDB = require("./mongodb");
 
-const dbUrl = `mongodb://139.199.129.237:27017`;
+// 数据库配置
+const dbUrl = `mongodb://0.0.0.0:27017`;
 const dbName = `meizi`;
 
 const db = new MongoDB(dbUrl, dbName);
 
 
 // page
-const pageCount = 2;
+const pageCount = 1;
 const pageUrl = [];
 
 for (let i = 1; i <= pageCount; i++) {
@@ -26,8 +27,8 @@ for (let i = 1; i <= pageCount; i++) {
 }
 
 
-//  定时器
-
+// 定时器
+// 每
 const day = 86400000;
 const YMD = new Date().toLocaleDateString();
 let lowTime = new Date(`${YMD} 00:00:00`).getTime();
@@ -46,7 +47,7 @@ function timeHandler() {
 	}
 }
 
-
+// getPage2Url(pageUrl);
 
 // 获取页面的全部url
 function getPage2Url(pageUrl) {
@@ -55,7 +56,7 @@ function getPage2Url(pageUrl) {
 	async.mapLimit(pageUrl, 1, async (url) => {
 		let linkList = [];
 		
-		let html = await getRequest(url);
+		let html = await getPageHtml(url);
 
 		let $ = cheerio.load(html);
 		
@@ -64,7 +65,13 @@ function getPage2Url(pageUrl) {
 			let data = {
 				href: $(item).find(".titlelnk").attr("href"),
 				title: $(item).find(".titlelnk").text(),
-				desc: $(item).find(".post_item_summary").text()
+				desc: $(item).find(".post_item_summary").text().trim(),
+				readCount: $(item).find(".article_view").text().replace(/[^0-9]*/g, ""),
+				publishTime: $(item).find(".post_item_foot").contents().filter(function() {return this.nodeType === 3}).text().replace(/[\u4e00-\u9fa5]*/g, '').trim(),
+				author: {
+					name: $(item).find(".lightblue").text(),
+					href: $(item).find(".lightblue").attr("href")
+				}
 			};
 
 			linkList.push(data);
@@ -73,65 +80,53 @@ function getPage2Url(pageUrl) {
 		console.log(`第 ${count} 条请求完成.`);
 		count++;
 
-		// 插入
-		db.insert("cnblogs", linkList, (err, result) => {
-			if (err) throw err;
-			console.log("插入数据库完成!");
-		});
+		writeDB(linkList);
 
 		return linkList;
 
 	}, (err, results) => {
 		if (err) throw err;
+	})
+}
+
+// 写入数据库
+function writeDB(list) {
+
+	list.forEach(item => {
 		
-		writeFile(results);
-	})
+		let href = {href: item.href};
+		// 查表是否存在
+		db.find("cnblogs", href, (err, result) => {
+			if (err) throw err;
+			
+			// 不存在插入
+			if (result.length < 1) {
+				db.insert("cnblogs", item, (err, result) => {
+					if (err) throw err;
+					
+				});
+			} else {
+				console.log(`有重复链接： ${item.title}`);
+			}
+		});
+
+	});
+	
 }
-
-// 写入文件
-function writeFile(results) {
-	let data = {
-		date: new Date().toLocaleString(),
-		data: results
-	};
-
-	let jsonData = JSON.stringify(data);
-
-	// 文件名称
-	let fileName = new Date().toLocaleDateString();
-	let dirPath = path.join(__dirname, `/file`);
-	let filePath = path.join(dirPath, `/${fileName}.txt`);
-
-	if (!fs.existsSync(dirPath)) {
-		fs.mkdirSync(dirPath);
-	}
-
-	fs.writeFile(filePath, jsonData, async (err) => {
-		if (err) throw err;
-		console.log("保存txt");
-	})
-}
-
 
 // 发送请求
-function getRequest(url) {
+function getPageHtml(url) {
     return new Promise((resolve, reject) => {
 		
 		setTimeout(() => {
-			https.get(url, function (res) {
-				let html = "";
-		  
-				res.on("data", function (data) {
-					html += data;
-				});
-		  
-				res.on("end", function (data) {
-					resolve(html);
-				});
-		  
-			}).on("error", (error) => {
-				reject(error);
-			});
+			superagent
+				.get(url)
+				.end((err, result) => {
+					if (err) {
+						return reject(err);
+					};
+					resolve(result.text);
+				})
 		}, 500);
         
     });
