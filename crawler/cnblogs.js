@@ -8,8 +8,8 @@ const async = require('async');
 const MongoDB = require("./mongodb");
 
 // 数据库配置
-const dbUrl = `mongodb://0.0.0.0:27017`;
-const dbName = `meizi`;
+const dbUrl = `mongodb://192.168.1.33:27017`;
+const dbName = `test`;
 
 const db = new MongoDB(dbUrl, dbName);
 
@@ -96,12 +96,12 @@ function writeDB(list) {
 		
 		let href = {href: item.href};
 		// 查表是否存在
-		db.find("cnblogs", href, (err, result) => {
+		db.find("user", href, (err, result) => {
 			if (err) throw err;
 			
 			// 不存在插入
 			if (result.length < 1) {
-				db.insert("cnblogs", item, (err, result) => {
+				db.insert("user", item, (err, result) => {
 					if (err) throw err;
 					
 				});

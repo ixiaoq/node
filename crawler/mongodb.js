@@ -145,7 +145,7 @@ class MongoDB {
         // 第几个开始
         let skipS = (page - 1) * limit;
 
-        db.find().skip(skipS).limit(limit).sort(sort).toArray((err, result) => {
+        db.find().skip(skipS).limit(limit).toArray((err, result) => {
             this._resultHandler(err, result, callback);
 
             client.close();
